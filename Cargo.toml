@@ -11,6 +11,12 @@ repository = "https://github.com/hypercodec/templater"
 keywords = ["cli", "template"]
 categories = ["command-line-utilities"]
 
+exclude = [
+    "/out/",
+    "test.bat",
+    "/testing/"
+]
+
 [profile.dev]
 opt-level = 1
 
