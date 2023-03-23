@@ -11,6 +11,12 @@ repository = "https://github.com/hypercodec/templater"
 keywords = ["cli", "template"]
 categories = ["command-line-utilities"]
 
+[profile.dev]
+opt-level = 1
+
+[profile.release]
+opt-level = 3
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
