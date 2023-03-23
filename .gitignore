@@ -1,0 +1,7 @@
+# rust
+/target/
+
+# testing
+/out/
+test.bat
+/testing/
