@@ -34,4 +34,4 @@ To write a template that others can use with this tool, you must:
 4. Share your template and the installation process via your preferred method.
 
 ### License
-This tool is licensed under `MIT` or `Apache 2.0`, whichever you decide to use.
+This tool is licensed under the `MIT` license.
