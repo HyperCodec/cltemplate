@@ -2,6 +2,8 @@
 
 use std::{collections::HashMap, env, fs, io::stdin, path::PathBuf};
 
+/// Takes output path as input.
+/// Must be run in the directory of the template.
 fn main() {
     let output = PathBuf::from(env::args().collect::<Vec<String>>()[1..].join(" "));
 
