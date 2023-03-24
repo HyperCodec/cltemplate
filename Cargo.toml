@@ -14,7 +14,8 @@ categories = ["command-line-utilities"]
 exclude = [
     "/out/",
     "test.bat",
-    "/testing/"
+    "/testing/",
+    "/example/"
 ]
 
 [[bin]]
