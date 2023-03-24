@@ -1,7 +1,6 @@
 # CLTemplate
-[<img alt="github" src="https://img.shields.io/github/downloads/hypercodec/cltemplate/total" height="20">](https://github.com/hypercodec/cltemplate)
+[<img alt="github" src="https://img.shields.io/github/last-commit/hypercodec/cltemplate" height="20">](https://github.com/hypercodec/cltemplate)
 [<img alt="crates.io" src="https://img.shields.io/crates/d/cltemplate" height="20">](https://crates.io/crates/cltemplate)
-[<img alt="docs.rs" src="https://img.shields.io/docsrs/cltemplate" height="20">](https://docs.rs/cltemplate)
 
 Small commandline tool to create and use templates quickly
 
