@@ -1,13 +1,13 @@
 [package]
-name = "templater"
+name = "cltemplate"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache 2.0"
 authors = ["HyperCodec"]
 readme = "README.md"
 description = "Simple CLI tool for creating and using templates"
-homepage = "https://github.com/hypercodec/templater"
-repository = "https://github.com/hypercodec/templater"
+homepage = "https://github.com/hypercodec/cltemplate"
+repository = "https://github.com/hypercodec/cltemplate"
 keywords = ["cli", "template"]
 categories = ["command-line-utilities"]
 

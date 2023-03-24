@@ -1,5 +1,5 @@
-# Templater
-Write and use templates quickly
+# CLTemplate
+Small commandline tool to create and use templates quickly
 
 ### Installation
 Simply run `cargo install templater` to install the tool.
