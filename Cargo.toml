@@ -17,6 +17,10 @@ exclude = [
     "/testing/"
 ]
 
+[[bin]]
+name = "template"
+path = "src/main.rs"
+
 [profile.dev]
 opt-level = 1
 

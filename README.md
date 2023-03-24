@@ -2,12 +2,12 @@
 Small commandline tool to create and use templates quickly
 
 ### Installation
-Simply run `cargo install templater` to install the tool.
+Simply run `cargo install cltemplate` to install the tool.
 
 ### Using Templates
 To use a template, do the following:
 1. CD into the folder of the template (your terminal should be running at `path/to/template`)
-2. Run `templater path/to/output` and check the directory you provided
+2. Run `template path/to/output` and check the directory you provided
 
 ### Writing Templates
 To write a template that others can use with this tool, you must:
