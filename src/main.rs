@@ -1,6 +1,13 @@
+use std::path::Path;
 #[warn(missing_docs)]
 
-use std::{collections::HashMap, env, fs, io::stdin, path::PathBuf};
+use std::{collections::HashMap, env, fs, io::stdin, path::PathBuf, process};
+
+/// Simply prints `Error: <something>` and exits with provided code.
+fn error(s: &str, code: i32) {
+    println!("Error: {}", s);
+    process::exit(code);
+}
 
 /// Takes output path as input.
 /// Must be run in the directory of the template.
@@ -8,7 +15,13 @@ fn main() {
     let output = PathBuf::from(env::args().collect::<Vec<String>>()[1..].join(" "));
 
     // retrieving index
-    let binding = fs::read_to_string("./template.txt").expect("Unable to read template.txt");
+    let binding = match fs::read_to_string("./template.txt") {
+        Ok(b) => b,
+        _ => {
+            error("Unable to read template.txt", 2);
+            String::new()
+        }
+    };
     let binding = binding.trim();
     let keys: Vec<&str> = binding.lines().collect();
 
@@ -22,7 +35,10 @@ fn main() {
 
         println!("- {}:", key);
 
-        stdin().read_line(&mut input).expect("Unable to read line");
+        match stdin().read_line(&mut input) {
+            Ok(_) => (),
+            _ => error("Unable to read line", 30)
+        };
 
         index.insert(key.to_string(), input.trim().to_string());
     }
@@ -37,29 +53,47 @@ fn main() {
 
             let (path2, file_type) = (entry.path(), entry.file_type().unwrap());
 
-            // segment representing
-            let path3 = path2
-                .strip_prefix(&working_directory)
-                .expect("Unable to separate directory from full path");
+            // split segment from full path
+            let path3 = match path2.strip_prefix(&working_directory) {
+                Ok(p) => p,
+                _ => {
+                    error("Unable to separate directory from full path", 1);
+                    Path::new("")
+                }
+            };
+
+            // add segment to output
             let path4: PathBuf = [&output, &path3.to_path_buf()].iter().collect();
 
             // create folder and reappend to work
             if file_type.is_dir() {
                 work.push(path2.clone());
-                fs::create_dir(path4).expect("Unable to copy dir");
+                match fs::create_dir(path4) {
+                    Ok(_) => (),
+                    _ => error("Unable to copy directory", 29)
+                }
 
                 continue;
             }
 
             if file_type.is_file() && entry.file_name() != "template.txt" {
-                let mut content = fs::read_to_string(path2).expect("Unable to read file");
+                let mut content = match fs::read_to_string(path2) {
+                    Ok(c) => c,
+                    _ => {
+                        error("Unable to read file", 30);
+                        String::new()
+                    }
+                };
 
                 // replace keywords
                 for (key, val) in index.iter() {
                     content = content.replace(&format!("%{}%", key), val)
                 }
 
-                fs::write(path4, content).expect("Unable to copy file");
+                match fs::write(path4, content) {
+                    Ok(_) => (),
+                    _ => error("Unable to copy file", 29)
+                };
             }
         }
     }
