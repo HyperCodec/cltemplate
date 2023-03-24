@@ -1,8 +1,31 @@
 [package]
-name = "templater"
+name = "cltemplate"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache 2.0"
+authors = ["HyperCodec"]
+readme = "README.md"
+description = "A simple CLI tool for creating and using templates"
+homepage = "https://github.com/hypercodec/cltemplate"
+repository = "https://github.com/hypercodec/cltemplate"
+keywords = ["cli", "template"]
+categories = ["command-line-utilities"]
+
+exclude = [
+    "/out/",
+    "test.bat",
+    "/testing/"
+]
+
+[[bin]]
+name = "template"
+path = "src/main.rs"
+
+[profile.dev]
+opt-level = 1
+
+[profile.release]
+opt-level = 3
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
