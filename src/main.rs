@@ -44,6 +44,8 @@ fn main() {
         index.insert(key.to_string(), input.trim().to_string());
     }
 
+    println!("\nCopying template:");
+
     // copy files over
     let working_directory = PathBuf::from("./");
     let mut work = vec![working_directory.clone()];
