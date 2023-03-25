@@ -1,7 +1,8 @@
-use std::path::Path;
 #[warn(missing_docs)]
-
-use std::{collections::HashMap, env, fs, io::stdin, path::PathBuf, process};
+use std::{
+    collections::HashMap, env, fs, fs::File, io::prelude::*, io::stdin, path::Path, path::PathBuf,
+    process,
+};
 
 /// Simply prints `Error: <something>` and exits with provided code.
 fn error(s: &str, code: i32) {
@@ -37,7 +38,7 @@ fn main() {
 
         match stdin().read_line(&mut input) {
             Ok(_) => (),
-            _ => error("Unable to read line", 30)
+            _ => error("Unable to read line", 30),
         };
 
         index.insert(key.to_string(), input.trim().to_string());
@@ -58,9 +59,16 @@ fn main() {
                 Ok(p) => p,
                 _ => {
                     error("Unable to separate directory from full path", 1);
-                    Path::new("")
+                    Path::new("") // dummy object, should exit before reaching
                 }
             };
+
+            // debug
+            let istemplate = entry.file_name() == "template.txt";
+
+            if !istemplate {
+                println!("Copying: {:#?}", path3);
+            }
 
             // add segment to output
             let path4: PathBuf = [&output, &path3.to_path_buf()].iter().collect();
@@ -70,29 +78,47 @@ fn main() {
                 work.push(path2.clone());
                 match fs::create_dir(path4) {
                     Ok(_) => (),
-                    _ => error("Unable to copy directory", 29)
+                    _ => error("Unable to copy directory", 29),
                 }
 
                 continue;
             }
 
-            if file_type.is_file() && entry.file_name() != "template.txt" {
-                let mut content = match fs::read_to_string(path2) {
-                    Ok(c) => c,
-                    _ => {
-                        error("Unable to read file", 30);
-                        String::new()
+            if file_type.is_file() && !istemplate {
+                match fs::read_to_string(path2.clone()) {
+                    Ok(mut content) => {
+                        // replace keywords
+                        for (key, val) in index.iter() {
+                            content = content.replace(&format!("%{}%", key), val)
+                        }
+
+                        match fs::write(path4, content) {
+                            Ok(_) => (),
+                            _ => error("Unable to copy file", 29),
+                        };
                     }
-                };
+                    _ => {
+                        let content = match fs::read(path2) {
+                            Ok(c) => c,
+                            _ => {
+                                error("Unable to read file", 30);
+                                Vec::new() // dummy object, should exit before reaching
+                            }
+                        };
 
-                // replace keywords
-                for (key, val) in index.iter() {
-                    content = content.replace(&format!("%{}%", key), val)
-                }
+                        let mut file = match File::create(path4) {
+                            Ok(f) => f,
+                            _ => {
+                                error("Unable to create new file", 29);
+                                File::open("./").unwrap() // dummy object, should exit before reaching
+                            }
+                        };
 
-                match fs::write(path4, content) {
-                    Ok(_) => (),
-                    _ => error("Unable to copy file", 29)
+                        match file.write_all(&content) {
+                            Ok(_) => (),
+                            _ => error("Unable to write to file", 29),
+                        }
+                    }
                 };
             }
         }
