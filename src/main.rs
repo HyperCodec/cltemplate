@@ -63,6 +63,13 @@ fn main() {
                 }
             };
 
+            // debug
+            let istemplate = entry.file_name() == "template.txt";
+
+            if !istemplate {
+                println!("Copying: {:#?}", path3);
+            }
+
             // add segment to output
             let path4: PathBuf = [&output, &path3.to_path_buf()].iter().collect();
 
@@ -77,7 +84,7 @@ fn main() {
                 continue;
             }
 
-            if file_type.is_file() && entry.file_name() != "template.txt" {
+            if file_type.is_file() && !istemplate {
                 match fs::read_to_string(path2.clone()) {
                     Ok(mut content) => {
                         // replace keywords
