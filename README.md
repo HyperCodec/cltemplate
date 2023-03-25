@@ -12,6 +12,8 @@ To use a template, do the following:
 1. CD into the folder of the template (your terminal should be running at `path/to/template`)
 2. Run `template path/to/output` and check the directory you provided
 
+NOTE: the `path/to/output` folder MUST be created, or else you will get `Error: Unable to copy file`
+
 ### Writing Templates
 To write a template that others can use with this tool, you must:
 1. Create a folder for the template (obviously)
