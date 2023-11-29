@@ -1,130 +1,119 @@
-#[warn(missing_docs)]
-use std::{
-    collections::HashMap, env, fs, fs::File, io::prelude::*, io::stdin, path::Path, path::PathBuf,
-    process,
-};
+mod error;
 
-/// Simply prints `Error: <something>` and exits with provided code.
-fn error(s: &str, code: i32) {
-    println!("Error: {}", s);
-    process::exit(code);
+use error::Result;
+
+use std::{path::PathBuf, str::FromStr, sync::{Arc, Mutex}, collections::HashMap, fs};
+use clap::Parser;
+use dialoguer::{theme::ColorfulTheme, Input};
+use tokio::task::JoinHandle;
+use tracing_subscriber::EnvFilter;
+use tracing::{info, debug};
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref ITEMS: Arc<Mutex<HashMap<String, String>>> = Arc::new(Mutex::new(HashMap::new()));
+    static ref TASKS: Arc<Mutex<Vec<JoinHandle<Result<()>>>>> = Arc::new(Mutex::new(Vec::new()));
 }
 
-/// Takes output path as input.
-/// Must be run in the directory of the template.
-fn main() {
-    let output = PathBuf::from(env::args().collect::<Vec<String>>()[1..].join(" "));
+#[derive(Parser, Debug)]
+#[command(
+    name =  "template",
+    author = "HyperCodec",
+    about = "A small CLI tool for quickly creating and using templates",
+)]
+struct Cli {
+    output_path: PathBuf,
 
-    // retrieving index
-    let binding = match fs::read_to_string("./template.txt") {
-        Ok(b) => b,
-        _ => {
-            error("Unable to read template.txt", 2);
-            String::new()
-        }
+    #[clap(short, long, help = "The path to the template")]
+    input_path: Option<PathBuf>,
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let args = Cli::parse();
+
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::try_from_default_env()
+            .or_else(|_| EnvFilter::from_str("info"))
+            .unwrap()
+        )
+        .init();
+
+    let output = args.output_path;
+    let input = match args.input_path {
+        Some(v) => v,
+        None => std::env::current_dir().expect("Failed to detect current path"),
     };
-    let binding = binding.trim();
-    let keys: Vec<&str> = binding.lines().collect();
 
-    let mut index = HashMap::new();
+    // check and read template.txt in local dir
+    info!("Parsing manifest");
+    let manifestdir = input.join("template.txt");
+    let mut items = ITEMS.lock().unwrap();
+    let theme = ColorfulTheme::default();
+    
+    let content = std::fs::read_to_string(manifestdir)?;
 
-    println!("Input the replacement for the following:\n");
+    for k in content.lines() {
+        debug!("Found key: {k}");
+        let v: String = Input::with_theme(&theme)
+            .with_prompt(k)
+            .interact_text()?;
 
-    // add keys to index
-    for key in keys {
-        let mut input = String::new();
-
-        println!("- {}:", key);
-
-        match stdin().read_line(&mut input) {
-            Ok(_) => (),
-            _ => error("Unable to read line", 30),
-        };
-
-        index.insert(key.to_string(), input.trim().to_string());
+        items.insert(k.to_string(), v);
     }
 
-    println!("\nCopying template:");
+    info!("Copying template");
+    template_async(input, output, input).await;
 
-    // copy files over
-    let working_directory = PathBuf::from("./");
-    let mut work = vec![working_directory.clone()];
+    let handles = TASKS.into_inner().unwrap();
 
-    while let Some(path) = work.pop() {
-        for entry in path.read_dir().unwrap() {
-            let entry = entry.unwrap();
+    for h in handles.into_iter() { // hmmmmm need to consume but can't
+        h.await??;
+    }
 
-            let (path2, file_type) = (entry.path(), entry.file_type().unwrap());
+    Ok(())
+}
 
-            // split segment from full path
-            let path3 = match path2.strip_prefix(&working_directory) {
-                Ok(p) => p,
-                _ => {
-                    error("Unable to separate directory from full path", 1);
-                    Path::new("") // dummy object, should exit before reaching
-                }
-            };
+async fn template_async(path: PathBuf, current_output: PathBuf, og_input: PathBuf) -> Result<()> {
+    let subdirs = fs::read_dir(path)?;
 
-            // debug
-            let istemplate = entry.file_name() == "template.txt";
+    // try create current dir
+    fs::create_dir_all(&current_output).ok();
 
-            if !istemplate {
-                println!("Copying: {:#?}", path3);
-            }
+    for dir in subdirs {
+        let dir = dir.unwrap();
+        let (path, filetype) = (dir.path(), dir.file_type().unwrap());
 
-            // add segment to output
-            let path4: PathBuf = [&output, &path3.to_path_buf()].iter().collect();
-
-            // create folder and reappend to work
-            if file_type.is_dir() {
-                work.push(path2.clone());
-                match fs::create_dir(path4) {
-                    Ok(_) => (),
-                    _ => error("Unable to copy directory", 29),
-                }
-
+        info!("Copying {:#?}", path.strip_prefix(&og_input));
+        if filetype.is_file() {
+            if path.file_name().unwrap() == "template.txt" {
                 continue;
             }
 
-            if file_type.is_file() && !istemplate {
-                match fs::read_to_string(path2.clone()) {
-                    Ok(mut content) => {
-                        // replace keywords
-                        for (key, val) in index.iter() {
-                            content = content.replace(&format!("%{}%", key), val)
-                        }
-
-                        match fs::write(path4, content) {
-                            Ok(_) => (),
-                            _ => error("Unable to copy file", 29),
-                        };
-                    }
-                    _ => {
-                        let content = match fs::read(path2) {
-                            Ok(c) => c,
-                            _ => {
-                                error("Unable to read file", 30);
-                                Vec::new() // dummy object, should exit before reaching
-                            }
-                        };
-
-                        let mut file = match File::create(path4) {
-                            Ok(f) => f,
-                            _ => {
-                                error("Unable to create new file", 29);
-                                File::open("./").unwrap() // dummy object, should exit before reaching
-                            }
-                        };
-
-                        match file.write_all(&content) {
-                            Ok(_) => (),
-                            _ => error("Unable to write to file", 29),
-                        }
-                    }
-                };
+            // file stuff
+            debug!("Replacing template text");
+            let mut content = fs::read_to_string(path)?;
+            let items = ITEMS.lock().unwrap();
+            
+            for (k, v) in items.iter() {
+                content = content.replace(&format!("%{}%", k), v);
             }
+
+            fs::write(&current_output, content)?;
+
+            continue;
         }
+
+        // directory
+        let mut handles = TASKS.lock().unwrap();
+
+        let new_output = current_output.join(dir.file_name());
+        let og_input2 = og_input.clone();
+        handles.push(tokio::spawn(async move {
+            template_async(path, new_output, og_input2).await
+        }));
     }
 
-    println!("Template copied successfully!");
+    Ok(())
 }
