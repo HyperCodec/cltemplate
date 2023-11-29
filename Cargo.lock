@@ -187,7 +187,6 @@ dependencies = [
  "clap",
  "dialoguer",
  "lazy_static",
- "once_cell",
  "thiserror",
  "tokio",
  "tracing",
