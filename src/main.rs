@@ -63,7 +63,7 @@ async fn main() -> Result<()> {
     let content = match std::fs::read_to_string(manifestdir) {
         Ok(c) => c,
         Err(_) => {
-            error!("Failed to read template.txt in current directory");
+            error!("Failed to read template.txt in template directory");
             std::process::exit(1);
         }
     };
