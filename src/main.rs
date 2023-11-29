@@ -2,7 +2,7 @@ mod error;
 
 use error::Result;
 
-use std::{path::PathBuf, str::FromStr, sync::{Arc, Mutex}, collections::HashMap, fs};
+use std::{path::PathBuf, str::FromStr, sync::{Arc, Mutex}, collections::HashMap, fs, time::Instant};
 use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Input};
 use tokio::task::JoinHandle;
@@ -67,6 +67,7 @@ async fn main() -> Result<()> {
     drop(items);
 
     info!("Beginning template copying process");
+    let start = Instant::now();
     let tasks = Arc::new(Mutex::new(Vec::new()));
     template_async(input.clone(), output, input, tasks.clone()).await?;
 
@@ -76,6 +77,8 @@ async fn main() -> Result<()> {
     for h in handles.into_iter() {
         h.await??;
     }
+
+    info!("Template copied successfully (elapsed: {:#?})", start.elapsed());
 
     Ok(())
 }
@@ -110,7 +113,6 @@ async fn template_async(path: PathBuf, current_output: PathBuf, og_input: PathBu
                 content = content.replace(&format!("%{}%", k), v);
             }
 
-            dbg!(&current_output);
             fs::write(&current_output.join(fname), content)?;
 
             debug!("Finished replacing template text");
