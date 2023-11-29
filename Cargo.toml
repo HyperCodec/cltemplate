@@ -1,6 +1,6 @@
 [package]
 name = "cltemplate"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 license = "MIT"
 authors = ["HyperCodec"]
@@ -11,6 +11,11 @@ repository = "https://github.com/hypercodec/cltemplate"
 keywords = ["cli", "template"]
 categories = ["command-line-utilities"]
 default-run = "template"
+
+exclude = [
+    "/out/",
+    "/example/",
+]
 
 [[bin]]
 name = "template"
