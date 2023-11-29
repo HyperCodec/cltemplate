@@ -16,7 +16,7 @@ Optionally, you can use the `--template-path` param instead of CDing to the the 
 
 ### Writing Templates
 To write a template that others can use with this tool, you must:
-1. Create a folder for the template (obviously)
+1. Create a folder for the template
 2. In the root directory of the folder, create a `template.txt` file. In this file, there should be the name of each replaceable item, separated by newlines (ex: 
     ```
     foo
