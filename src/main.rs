@@ -36,6 +36,7 @@ struct Cli {
 }
 
 #[tokio::main]
+#[allow(clippy::await_holding_lock)]
 async fn main() -> Result<()> {
     let args = Cli::parse();
 
