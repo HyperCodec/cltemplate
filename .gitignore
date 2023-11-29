@@ -1,11 +1,6 @@
-# rust
-/target/
-
 # testing
-/out/
-test.bat
 /testing/
 
 # Added by cargo
 
-/target
+/target/

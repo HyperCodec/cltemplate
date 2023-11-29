@@ -9,10 +9,10 @@ use tokio::task::JoinHandle;
 use tracing_subscriber::EnvFilter;
 use tracing::{info, debug};
 use lazy_static::lazy_static;
+use async_recursion::async_recursion;
 
 lazy_static! {
     static ref ITEMS: Arc<Mutex<HashMap<String, String>>> = Arc::new(Mutex::new(HashMap::new()));
-    static ref TASKS: Arc<Mutex<Vec<JoinHandle<Result<()>>>>> = Arc::new(Mutex::new(Vec::new()));
 }
 
 #[derive(Parser, Debug)]
@@ -52,7 +52,8 @@ async fn main() -> Result<()> {
     let mut items = ITEMS.lock().unwrap();
     let theme = ColorfulTheme::default();
     
-    let content = std::fs::read_to_string(manifestdir)?.trim();
+    let content = std::fs::read_to_string(manifestdir)?;
+    let content = content.trim();
 
     for k in content.lines() {
         debug!("Found key: {k}");
@@ -63,19 +64,26 @@ async fn main() -> Result<()> {
         items.insert(k.to_string(), v);
     }
 
-    info!("Copying template");
-    template_async(input, output, input).await;
+    drop(items);
 
-    let handles = TASKS.into_inner().unwrap();
+    info!("Beginning template copying process");
+    let tasks = Arc::new(Mutex::new(Vec::new()));
+    template_async(input.clone(), output, input, tasks.clone()).await?;
 
-    for h in handles.into_iter() { // hmmmmm need to consume but can't
+    let lock = Arc::try_unwrap(tasks).unwrap();
+    let handles = lock.into_inner().unwrap();
+
+    for h in handles.into_iter() {
         h.await??;
     }
 
     Ok(())
 }
 
-async fn template_async(path: PathBuf, current_output: PathBuf, og_input: PathBuf) -> Result<()> {
+#[async_recursion]
+async fn template_async(path: PathBuf, current_output: PathBuf, og_input: PathBuf, tasks: Arc<Mutex<Vec<JoinHandle<Result<()>>>>>) -> Result<()> {
+    debug!("Worker started");
+
     let subdirs = fs::read_dir(path)?;
 
     // try create current dir
@@ -85,35 +93,44 @@ async fn template_async(path: PathBuf, current_output: PathBuf, og_input: PathBu
         let dir = dir.unwrap();
         let (path, filetype) = (dir.path(), dir.file_type().unwrap());
 
-        info!("Copying {:#?}", path.strip_prefix(&og_input));
         if filetype.is_file() {
-            if path.file_name().unwrap() == "template.txt" {
+            let fname = path.file_name().unwrap();
+            if fname == "template.txt" {
                 continue;
             }
 
+            info!("Copying {:#?}", path.strip_prefix(&og_input).unwrap());
+
             // file stuff
             debug!("Replacing template text");
-            let mut content = fs::read_to_string(path)?;
+            let mut content = fs::read_to_string(&path)?;
             let items = ITEMS.lock().unwrap();
             
             for (k, v) in items.iter() {
                 content = content.replace(&format!("%{}%", k), v);
             }
 
-            fs::write(&current_output, content)?;
+            dbg!(&current_output);
+            fs::write(&current_output.join(fname), content)?;
 
+            debug!("Finished replacing template text");
             continue;
         }
 
         // directory
-        let mut handles = TASKS.lock().unwrap();
+        info!("Copying {:#?}", path.strip_prefix(&og_input).unwrap());
+        let tasks2 = tasks.clone();
+        let mut handles = tasks2.lock().unwrap();
 
         let new_output = current_output.join(dir.file_name());
         let og_input2 = og_input.clone();
+        let tasks2 = tasks.clone();
         handles.push(tokio::spawn(async move {
-            template_async(path, new_output, og_input2).await
+            template_async(path, new_output, og_input2, tasks2).await
         }));
     }
+
+    debug!("Worker finished");
 
     Ok(())
 }

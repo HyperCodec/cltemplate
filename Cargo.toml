@@ -13,8 +13,8 @@ categories = ["command-line-utilities"]
 default-run = "template"
 
 exclude = [
-    "/out/",
     "/example/",
+    "/testing/",
 ]
 
 [[bin]]
@@ -25,6 +25,7 @@ path = "src/main.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+async-recursion = "1.0.5"
 clap = { version = "4.4.10", features = ["derive"] }
 dialoguer = "0.11.0"
 lazy_static = "1.4.0"
