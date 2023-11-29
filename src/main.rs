@@ -52,7 +52,7 @@ async fn main() -> Result<()> {
     let mut items = ITEMS.lock().unwrap();
     let theme = ColorfulTheme::default();
     
-    let content = std::fs::read_to_string(manifestdir)?;
+    let content = std::fs::read_to_string(manifestdir)?.trim();
 
     for k in content.lines() {
         debug!("Found key: {k}");
