@@ -2,14 +2,21 @@ mod error;
 
 use error::Result;
 
-use std::{path::PathBuf, str::FromStr, sync::{Arc, Mutex}, collections::HashMap, fs, time::Instant};
+use async_recursion::async_recursion;
 use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Input};
-use tokio::task::JoinHandle;
-use tracing_subscriber::EnvFilter;
-use tracing::{info, debug};
 use lazy_static::lazy_static;
-use async_recursion::async_recursion;
+use std::{
+    collections::HashMap,
+    fs,
+    path::PathBuf,
+    str::FromStr,
+    sync::{Arc, Mutex},
+    time::Instant,
+};
+use tokio::task::JoinHandle;
+use tracing::{debug, info};
+use tracing_subscriber::EnvFilter;
 
 lazy_static! {
     static ref ITEMS: Arc<Mutex<HashMap<String, String>>> = Arc::new(Mutex::new(HashMap::new()));
@@ -17,9 +24,9 @@ lazy_static! {
 
 #[derive(Parser, Debug)]
 #[command(
-    name =  "template",
+    name = "template",
     author = "HyperCodec",
-    about = "A small CLI tool for quickly creating and using templates",
+    about = "A small CLI tool for quickly creating and using templates"
 )]
 struct Cli {
     output_path: PathBuf,
@@ -35,8 +42,8 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
             EnvFilter::try_from_default_env()
-            .or_else(|_| EnvFilter::from_str("info"))
-            .unwrap()
+                .or_else(|_| EnvFilter::from_str("info"))
+                .unwrap(),
         )
         .init();
 
@@ -51,15 +58,13 @@ async fn main() -> Result<()> {
     let manifestdir = input.join("template.txt");
     let mut items = ITEMS.lock().unwrap();
     let theme = ColorfulTheme::default();
-    
+
     let content = std::fs::read_to_string(manifestdir)?;
     let content = content.trim();
 
     for k in content.lines() {
         debug!("Found key: {k}");
-        let v: String = Input::with_theme(&theme)
-            .with_prompt(k)
-            .interact_text()?;
+        let v: String = Input::with_theme(&theme).with_prompt(k).interact_text()?;
 
         items.insert(k.to_string(), v);
     }
@@ -78,13 +83,21 @@ async fn main() -> Result<()> {
         h.await??;
     }
 
-    info!("Template copied successfully (elapsed: {:#?})", start.elapsed());
+    info!(
+        "Template copied successfully (elapsed: {:#?})",
+        start.elapsed()
+    );
 
     Ok(())
 }
 
 #[async_recursion]
-async fn template_async(path: PathBuf, current_output: PathBuf, og_input: PathBuf, tasks: Arc<Mutex<Vec<JoinHandle<Result<()>>>>>) -> Result<()> {
+async fn template_async(
+    path: PathBuf,
+    current_output: PathBuf,
+    og_input: PathBuf,
+    tasks: Arc<Mutex<Vec<JoinHandle<Result<()>>>>>,
+) -> Result<()> {
     debug!("Worker started");
 
     let subdirs = fs::read_dir(path)?;
@@ -108,7 +121,7 @@ async fn template_async(path: PathBuf, current_output: PathBuf, og_input: PathBu
             debug!("Replacing template text");
             let mut content = fs::read_to_string(&path)?;
             let items = ITEMS.lock().unwrap();
-            
+
             for (k, v) in items.iter() {
                 content = content.replace(&format!("%{}%", k), v);
             }
