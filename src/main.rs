@@ -26,13 +26,13 @@ lazy_static! {
 #[command(
     name = "template",
     author = "HyperCodec",
-    about = "A small CLI tool for quickly creating and using templates"
+    about = "A small commandline tool for quickly creating and using templates"
 )]
 struct Cli {
     output_path: PathBuf,
 
     #[clap(short, long, help = "The path to the template")]
-    input_path: Option<PathBuf>,
+    template_path: Option<PathBuf>,
 }
 
 #[tokio::main]
@@ -49,14 +49,14 @@ async fn main() -> Result<()> {
         .init();
 
     let output = args.output_path;
-    let input = match args.input_path {
-        Some(v) => v,
+    let template = match args.template_path {
+        Some(p) => p,
         None => std::env::current_dir().expect("Failed to detect current path"),
     };
 
     // check and read template.txt in local dir
     info!("Parsing manifest");
-    let manifestdir = input.join("template.txt");
+    let manifestdir = template.join("template.txt");
     let mut items = ITEMS.lock().unwrap();
     let theme = ColorfulTheme::default();
 
@@ -75,7 +75,7 @@ async fn main() -> Result<()> {
     info!("Beginning template copying process");
     let start = Instant::now();
     let tasks = Arc::new(Mutex::new(Vec::new()));
-    template_async(input.clone(), output, input, tasks.clone()).await?;
+    template_async(template.clone(), output, template, tasks.clone()).await?;
 
     let lock = Arc::try_unwrap(tasks).unwrap();
     let handles = lock.into_inner().unwrap();
@@ -96,7 +96,7 @@ async fn main() -> Result<()> {
 async fn template_async(
     path: PathBuf,
     current_output: PathBuf,
-    og_input: PathBuf,
+    template_path: PathBuf,
     tasks: Arc<Mutex<Vec<JoinHandle<Result<()>>>>>,
 ) -> Result<()> {
     debug!("Worker started");
@@ -116,7 +116,10 @@ async fn template_async(
                 continue;
             }
 
-            info!("Copying {:#?}", path.strip_prefix(&og_input).unwrap());
+            info!(
+                "Copying {}",
+                path.strip_prefix(&template_path).unwrap().display()
+            );
 
             // file stuff
             debug!("Replacing template text");
@@ -134,15 +137,18 @@ async fn template_async(
         }
 
         // directory
-        info!("Copying {:#?}", path.strip_prefix(&og_input).unwrap());
+        info!(
+            "Copying {}",
+            path.strip_prefix(&template_path).unwrap().display()
+        );
         let tasks2 = tasks.clone();
         let mut handles = tasks2.lock().unwrap();
 
         let new_output = current_output.join(dir.file_name());
-        let og_input2 = og_input.clone();
+        let template_path2 = template_path.clone();
         let tasks2 = tasks.clone();
         handles.push(tokio::spawn(async move {
-            template_async(path, new_output, og_input2, tasks2).await
+            template_async(path, new_output, template_path2, tasks2).await
         }));
     }
 
