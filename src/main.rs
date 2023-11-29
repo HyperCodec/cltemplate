@@ -15,7 +15,7 @@ use std::{
     time::Instant,
 };
 use tokio::task::JoinHandle;
-use tracing::{debug, info};
+use tracing::{debug, error, info};
 use tracing_subscriber::EnvFilter;
 
 lazy_static! {
@@ -60,7 +60,13 @@ async fn main() -> Result<()> {
     let mut items = ITEMS.lock().unwrap();
     let theme = ColorfulTheme::default();
 
-    let content = std::fs::read_to_string(manifestdir)?;
+    let content = match std::fs::read_to_string(manifestdir) {
+        Ok(c) => c,
+        Err(_) => {
+            error!("Failed to read template.txt in template directory");
+            std::process::exit(1);
+        }
+    };
     let content = content.trim();
 
     for k in content.lines() {
@@ -122,17 +128,25 @@ async fn template_async(
             );
 
             // file stuff
-            debug!("Replacing template text");
-            let mut content = fs::read_to_string(&path)?;
-            let items = ITEMS.lock().unwrap();
+            let content = fs::read(&path)?;
+            let newf = current_output.join(fname);
 
-            for (k, v) in items.iter() {
-                content = content.replace(&format!("%{}%", k), v);
+            if !content.is_ascii() {
+                debug!("Non-ascii file detected, copying directly instead of replacing text");
+                fs::copy(&path, newf)?;
+            } else {
+                debug!("Replacing template text");
+                let mut content = String::from_utf8(content).unwrap();
+                let items = ITEMS.lock().unwrap();
+
+                for (k, v) in items.iter() {
+                    content = content.replace(&format!("%{}%", k), v);
+                }
+
+                fs::write(newf, content)?;
+                debug!("Finished replacing template text");
             }
 
-            fs::write(&current_output.join(fname), content)?;
-
-            debug!("Finished replacing template text");
             continue;
         }
 
