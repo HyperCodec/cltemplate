@@ -1,12 +1,6 @@
-# Based on https://github.com/actions-rs/meta/blob/master/recipes/quickstart.md
-#
-# While our "example" application has the platform-specific code,
-# for simplicity we are compiling and testing everything on the Ubuntu environment only.
-# For multi-OS testing see the `cross.yml` workflow.
-
 on: [push, pull_request]
 
-name: Quickstart
+name: Rust
 
 jobs:
   check:
@@ -27,7 +21,7 @@ jobs:
         run: cargo check
 
   test:
-    name: Test Suite
+    name: Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -43,8 +37,8 @@ jobs:
       - name: Run cargo test
         run: cargo test
 
-  lints:
-    name: Lints
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
