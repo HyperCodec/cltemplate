@@ -15,7 +15,7 @@ use std::{
     time::Instant,
 };
 use tokio::task::JoinHandle;
-use tracing::{debug, info};
+use tracing::{debug, info, error};
 use tracing_subscriber::EnvFilter;
 
 lazy_static! {
@@ -60,7 +60,13 @@ async fn main() -> Result<()> {
     let mut items = ITEMS.lock().unwrap();
     let theme = ColorfulTheme::default();
 
-    let content = std::fs::read_to_string(manifestdir)?;
+    let content = match std::fs::read_to_string(manifestdir) {
+        Ok(c) => c,
+        Err(_) => {
+            error!("Failed to read template.txt in current directory");
+            std::process::exit(1);
+        }
+    };
     let content = content.trim();
 
     for k in content.lines() {
