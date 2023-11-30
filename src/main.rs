@@ -155,7 +155,7 @@ async fn template_async(
                 let items = ITEMS.lock().unwrap();
 
                 for (k, v) in items.iter() {
-                    let re = Regex::new(&k).unwrap(); // should prob keep a cache of regexes but they dont work in hashmaps
+                    let re = Regex::new(k).unwrap(); // should prob keep a cache of regexes but they dont work in hashmaps
                     content = re.replace_all(&content, v).to_string();
                 }
 
