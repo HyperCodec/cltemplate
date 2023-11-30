@@ -124,7 +124,7 @@ async fn template_async(
 
             if !content.is_ascii() {
                 debug!("Non-ascii file detected, copying directly instead of replacing text");
-                fs::copy(&path, newf)?;
+                fs::write(newf, content)?;
             } else {
                 debug!("Replacing template text");
                 let mut content = String::from_utf8(content).unwrap();
