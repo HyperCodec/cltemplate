@@ -14,7 +14,6 @@ use std::{
     sync::{Arc, Mutex},
     time::Instant,
 };
-use tokio::task::JoinHandle;
 use tracing::{debug, error, info};
 use tracing_subscriber::EnvFilter;
 
@@ -80,15 +79,7 @@ async fn main() -> Result<()> {
 
     info!("Beginning template copying process");
     let start = Instant::now();
-    let tasks = Arc::new(Mutex::new(Vec::new()));
-    template_async(template.clone(), output, template, tasks.clone()).await?;
-
-    let lock = Arc::try_unwrap(tasks).unwrap();
-    let handles = lock.into_inner().unwrap();
-
-    for h in handles.into_iter() {
-        h.await??;
-    }
+    template_async(template.clone(), output, template).await?;
 
     info!(
         "Template copied successfully (elapsed: {:#?})",
@@ -103,11 +94,11 @@ async fn template_async(
     path: PathBuf,
     current_output: PathBuf,
     template_path: PathBuf,
-    tasks: Arc<Mutex<Vec<JoinHandle<Result<()>>>>>,
 ) -> Result<()> {
     debug!("Worker started");
 
     let subdirs = fs::read_dir(path)?;
+    let mut handles = Vec::new();
 
     // try create current dir
     fs::create_dir_all(&current_output).ok();
@@ -133,7 +124,7 @@ async fn template_async(
 
             if !content.is_ascii() {
                 debug!("Non-ascii file detected, copying directly instead of replacing text");
-                fs::copy(&path, newf)?;
+                fs::write(newf, content)?;
             } else {
                 debug!("Replacing template text");
                 let mut content = String::from_utf8(content).unwrap();
@@ -155,15 +146,16 @@ async fn template_async(
             "Copying {}",
             path.strip_prefix(&template_path).unwrap().display()
         );
-        let tasks2 = tasks.clone();
-        let mut handles = tasks2.lock().unwrap();
 
         let new_output = current_output.join(dir.file_name());
         let template_path2 = template_path.clone();
-        let tasks2 = tasks.clone();
         handles.push(tokio::spawn(async move {
-            template_async(path, new_output, template_path2, tasks2).await
+            template_async(path, new_output, template_path2).await
         }));
+    }
+
+    for h in handles {
+        h.await??;
     }
 
     debug!("Worker finished");
