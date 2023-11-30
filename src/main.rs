@@ -84,6 +84,7 @@ async fn main() -> Result<()> {
     let start = Instant::now();
     template_async(template.clone(), output, template, progress.clone()).await?;
 
+    println!();
     info!(
         "Template copied successfully (elapsed: {:#?})",
         start.elapsed()
