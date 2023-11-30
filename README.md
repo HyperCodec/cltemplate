@@ -40,3 +40,10 @@ To write a template that others can use with this tool, you must:
 
 ### License
 This tool is licensed under the `MIT` license.
+
+### Roadmap
+- [x] ~~Initial prototype~~
+- [x] ~~Complete rework~~
+- [x] ~~Asynchronous file IO~~
+- [ ] [Indicatif progress bar](https://github.com/HyperCodec/cltemplate/issues/14)
+- [ ] Dynamic filepaths
