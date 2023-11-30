@@ -187,6 +187,7 @@ dependencies = [
  "clap",
  "dialoguer",
  "lazy_static",
+ "regex",
  "thiserror",
  "tokio",
  "tracing",

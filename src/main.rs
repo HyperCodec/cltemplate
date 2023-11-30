@@ -16,6 +16,7 @@ use std::{
 };
 use tracing::{debug, error, info};
 use tracing_subscriber::EnvFilter;
+use regex::Regex;
 
 lazy_static! {
     static ref ITEMS: Arc<Mutex<HashMap<String, String>>> = Arc::new(Mutex::new(HashMap::new()));
@@ -72,7 +73,7 @@ async fn main() -> Result<()> {
         debug!("Found key: {k}");
         let v: String = Input::with_theme(&theme).with_prompt(k).interact_text()?;
 
-        items.insert(k.to_string(), v);
+        items.insert(format!(r#"\{{%\s*{}\s*%\}}"#, k), v);
     }
 
     drop(items);
@@ -131,7 +132,8 @@ async fn template_async(
                 let items = ITEMS.lock().unwrap();
 
                 for (k, v) in items.iter() {
-                    content = content.replace(&format!("%{}%", k), v);
+                    let re = Regex::new(&k).unwrap();
+                    content = re.replace_all(&content, v).to_string();
                 }
 
                 fs::write(newf, content)?;
