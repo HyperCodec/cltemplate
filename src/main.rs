@@ -6,6 +6,7 @@ use async_recursion::async_recursion;
 use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Input};
 use lazy_static::lazy_static;
+use regex::Regex;
 use std::{
     collections::HashMap,
     fs,
@@ -16,7 +17,6 @@ use std::{
 };
 use tracing::{debug, error, info};
 use tracing_subscriber::EnvFilter;
-use regex::Regex;
 
 lazy_static! {
     static ref ITEMS: Arc<Mutex<HashMap<String, String>>> = Arc::new(Mutex::new(HashMap::new()));
