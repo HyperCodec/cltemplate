@@ -107,12 +107,16 @@ async fn template_async(
 
     // init progress spinner
     let pb = multiprogress.add(ProgressBar::new_spinner());
-    pb.set_message(
-        path.strip_prefix(&template_path)
-            .unwrap()
-            .display()
-            .to_string(),
-    );
+    if path == template_path {
+        pb.set_message("Copy Template");
+    } else {
+        pb.set_message(
+            path.strip_prefix(&template_path)
+                .unwrap()
+                .display()
+                .to_string(),
+        );
+    }
     pb.enable_steady_tick(Duration::from_millis(128));
     pb.set_style(
         ProgressStyle::with_template("[{elapsed_precise}] {spinner:} {msg}")
