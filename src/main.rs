@@ -55,7 +55,7 @@ async fn main() -> Result<()> {
     };
 
     // check and read template.txt in local dir
-    info!("Parsing manifest");
+    debug!("Parsing manifest");
     let manifestdir = template.join("template.txt");
     let mut items = ITEMS.lock().unwrap();
     let theme = ColorfulTheme::default();
