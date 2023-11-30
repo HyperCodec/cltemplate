@@ -12,7 +12,7 @@ To use a template, do the following:
 1. CD into the folder of the template (your terminal should be running at `path/to/template`)
 2. Run `template path/to/output` and check the directory you provided
 
-Optionally, you can use the `--template-path` param instead of CDing to the the template folder
+Optionally, you can use the `--template-path` param (`-t` for short) instead of CDing to the the template folder
 
 ### Writing Templates
 To write a template that others can use with this tool, you must:
@@ -35,7 +35,7 @@ To write a template that others can use with this tool, you must:
     ```
     )
 
-3. Fill in the rest of the folder with the files provided in the template. Anything defined in `template.txt` that has `%` around it (ex: `%foo%`) will be replaced by whatever the user inputs. Anything surrounded by `%` that is not included in `template.txt` will remain unchanged.
+3. Fill in the rest of the folder with the files provided in the template. Anything defined in `template.txt` that has `{% %}` around it (ex: `{% foo %}`) will be replaced by whatever the user inputs. Anything surrounded by `{% %}` that is not included in `template.txt` will remain unchanged.
 4. Share your template and usage instructions via your preferred method.
 
 ### License
