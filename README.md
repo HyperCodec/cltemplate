@@ -45,6 +45,6 @@ This tool is licensed under the `MIT` license.
 - [x] ~~Initial prototype~~
 - [x] ~~Complete rework~~
 - [x] ~~Asynchronous file IO~~
-- [ ] [Indicatif task indicators](https://github.com/HyperCodec/cltemplate/issues/14)
-- [ ] Optionally providing template args in cli
+- [x] Indicatif task indicators
+- [ ] [Optionally providing template args in cli](https://github.com/HyperCodec/cltemplate/issues/18)
 - [ ] Dynamic filepaths
