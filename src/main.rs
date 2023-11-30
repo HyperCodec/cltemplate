@@ -14,7 +14,7 @@ use std::{
     path::PathBuf,
     str::FromStr,
     sync::{Arc, Mutex},
-    time::{Instant, Duration},
+    time::{Duration, Instant},
 };
 use tracing::{debug, error, info};
 use tracing_subscriber::EnvFilter;
@@ -106,31 +106,20 @@ async fn template_async(
 
     // init progress spinner
     let pb = multiprogress.add(ProgressBar::new_spinner());
-    pb.set_message(path.strip_prefix(&template_path).unwrap().display().to_string());
+    pb.set_message(
+        path.strip_prefix(&template_path)
+            .unwrap()
+            .display()
+            .to_string(),
+    );
     pb.enable_steady_tick(Duration::from_millis(128));
     pb.set_style(
         ProgressStyle::with_template("[{elapsed_precise}] {spinner:} {msg}")
-        .unwrap()
-        .tick_strings(&[
-			"⠋",
-			"⠙",
-			"⠚",
-			"⠒",
-			"⠂",
-			"⠂",
-			"⠒",
-			"⠲",
-			"⠴",
-			"⠦",
-			"⠖",
-			"⠒",
-			"⠐",
-			"⠐",
-			"⠒",
-			"⠓",
-			"⠋",
-            "✓", // TODO separate finished color
-		])
+            .unwrap()
+            .tick_strings(&[
+                "⠋", "⠙", "⠚", "⠒", "⠂", "⠂", "⠒", "⠲", "⠴", "⠦", "⠖", "⠒", "⠐", "⠐", "⠒", "⠓",
+                "⠋", "✓", // TODO separate finished color
+            ]),
     );
 
     // try create current dir
