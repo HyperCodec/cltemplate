@@ -36,7 +36,7 @@ To write a template that others can use with this tool, you must:
     )
 
 3. Fill in the rest of the folder with the files provided in the template. Anything defined in `template.txt` that has `%` around it (ex: `%foo%`) will be replaced by whatever the user inputs. Anything surrounded by `%` that is not included in `template.txt` will remain unchanged.
-4. Share your template and the installation process via your preferred method.
+4. Share your template and usage instructions via your preferred method.
 
 ### License
 This tool is licensed under the `MIT` license.
