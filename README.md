@@ -48,3 +48,4 @@ This tool is licensed under the `MIT` license.
 - [x] ~~Indicatif task indicators~~
 - [ ] [Optionally providing template args in cli](https://github.com/HyperCodec/cltemplate/issues/18)
 - [ ] Dynamic filepaths
+- [ ] Use TOML structure for manifest (for input types, etc.)
