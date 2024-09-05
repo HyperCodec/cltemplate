@@ -47,7 +47,7 @@ struct Cli {
     git: Option<String>,
 
     #[clap(short, long, help = "The path to a .zip file containing the template.")]
-    zip: Option<PathBuf>,
+    unzip: Option<PathBuf>,
 }
 
 #[tokio::main]
@@ -255,7 +255,7 @@ async fn retrieve_template(args: Cli) -> Result<AbstractPath> {
 
         // TODO exclude .git or something
         Ok(AbstractPath::TempDir(temp))
-    } else if let Some(path) = args.zip {
+    } else if let Some(path) = args.unzip {
         info!("Fetching template from .zip");
         let temp = TempDir::new("template")?;
         let file = fs::File::open(path)?;
