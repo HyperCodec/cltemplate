@@ -12,4 +12,7 @@ pub enum Error {
 
     #[error("Dialoguer Exception: {0}")]
     Dialoguer(#[from] dialoguer::Error),
+
+    #[error("Git Exception: {0}")]
+    Git(#[from] git2::Error),
 }
