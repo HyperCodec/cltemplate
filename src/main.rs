@@ -9,13 +9,19 @@ use git2::Repository;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use lazy_static::lazy_static;
 use regex::Regex;
-use tempdir::TempDir;
-use zip::ZipArchive;
 use std::{
-    collections::HashMap, fs, ops::Deref, path::{Path, PathBuf}, str::FromStr, sync::{Arc, Mutex}, time::{Duration, Instant}
+    collections::HashMap,
+    fs,
+    ops::Deref,
+    path::{Path, PathBuf},
+    str::FromStr,
+    sync::{Arc, Mutex},
+    time::{Duration, Instant},
 };
+use tempdir::TempDir;
 use tracing::{debug, error, info};
 use tracing_subscriber::EnvFilter;
+use zip::ZipArchive;
 
 lazy_static! {
     static ref ITEMS: Arc<Mutex<HashMap<String, String>>> = Arc::new(Mutex::new(HashMap::new()));
@@ -33,7 +39,11 @@ struct Cli {
     #[clap(short, long, help = "The path to the template")]
     template_path: Option<PathBuf>,
 
-    #[clap(short, long, help = "The URL of a Git repository to download the template from.")]
+    #[clap(
+        short,
+        long,
+        help = "The URL of a Git repository to download the template from."
+    )]
     git: Option<String>,
 
     #[clap(short, long, help = "The path to a .zip file containing the template.")]
@@ -54,7 +64,7 @@ async fn main() -> Result<()> {
         .init();
 
     let output = args.output_path.to_path_buf();
-    
+
     let template = retrieve_template(args).await?;
 
     // check and read template.txt in local dir
@@ -84,7 +94,13 @@ async fn main() -> Result<()> {
     info!("Beginning template copying process");
     let progress = Arc::new(MultiProgress::new());
     let start = Instant::now();
-    template_async(template.as_ref().to_path_buf(), output, template.as_ref().to_path_buf(), progress.clone()).await?;
+    template_async(
+        template.as_ref().to_path_buf(),
+        output,
+        template.as_ref().to_path_buf(),
+        progress.clone(),
+    )
+    .await?;
 
     if let AbstractPath::TempDir(temp) = template {
         temp.close()?;
@@ -236,7 +252,7 @@ async fn retrieve_template(args: Cli) -> Result<AbstractPath> {
         info!("Fetching template from git");
         let temp = TempDir::new("template")?;
         Repository::clone(&url, &temp)?;
-        
+
         // TODO exclude .git or something
         Ok(AbstractPath::TempDir(temp))
     } else if let Some(path) = args.zip {
@@ -245,10 +261,12 @@ async fn retrieve_template(args: Cli) -> Result<AbstractPath> {
         let file = fs::File::open(path)?;
         let mut zip = ZipArchive::new(file)?;
         zip.extract(&temp)?;
-        
+
         Ok(AbstractPath::TempDir(temp))
     } else {
         debug!("No template source args provided, using cd");
-        Ok(AbstractPath::PathBuf(std::env::current_dir().expect("Failed to fetch current directory")))
+        Ok(AbstractPath::PathBuf(
+            std::env::current_dir().expect("Failed to fetch current directory"),
+        ))
     }
 }
