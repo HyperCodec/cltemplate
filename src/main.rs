@@ -10,6 +10,7 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use lazy_static::lazy_static;
 use regex::Regex;
 use tempdir::TempDir;
+use zip::ZipArchive;
 use std::{
     collections::HashMap, fs, ops::Deref, path::{Path, PathBuf}, str::FromStr, sync::{Arc, Mutex}, time::{Duration, Instant}
 };
@@ -34,6 +35,9 @@ struct Cli {
 
     #[clap(short, long, help = "The URL of a Git repository to download the template from.")]
     git: Option<String>,
+
+    #[clap(short, long, help = "The path to a .zip file containing the template.")]
+    zip: Option<PathBuf>,
 }
 
 #[tokio::main]
@@ -51,7 +55,7 @@ async fn main() -> Result<()> {
 
     let output = args.output_path.to_path_buf();
     
-    let template = retrieve_template(args)?;
+    let template = retrieve_template(args).await?;
 
     // check and read template.txt in local dir
     debug!("Parsing manifest");
@@ -223,7 +227,7 @@ impl Deref for AbstractPath {
     }
 }
 
-fn retrieve_template(args: Cli) -> Result<AbstractPath> {
+async fn retrieve_template(args: Cli) -> Result<AbstractPath> {
     // TODO error if multiple of these args are present
     if let Some(path) = args.template_path {
         debug!("Found template-path arg");
@@ -234,6 +238,14 @@ fn retrieve_template(args: Cli) -> Result<AbstractPath> {
         Repository::clone(&url, &temp)?;
         
         // TODO exclude .git or something
+        Ok(AbstractPath::TempDir(temp))
+    } else if let Some(path) = args.zip {
+        info!("Fetching template from .zip");
+        let temp = TempDir::new("template")?;
+        let file = fs::File::open(path)?;
+        let mut zip = ZipArchive::new(file)?;
+        zip.extract(&temp)?;
+        
         Ok(AbstractPath::TempDir(temp))
     } else {
         debug!("No template source args provided, using cd");

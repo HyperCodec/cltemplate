@@ -15,4 +15,7 @@ pub enum Error {
 
     #[error("Git Exception: {0}")]
     Git(#[from] git2::Error),
+
+    #[error("Zip Exception: {0}")]
+    Zip(#[from] zip::result::ZipError),
 }
