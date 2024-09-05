@@ -1,1 +1,2 @@
-echo "Hello %name%!"
+echo "Hello {% name %}!"
+echo "{%name%} responds with {%message %}!"
